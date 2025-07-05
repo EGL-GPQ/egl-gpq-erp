@@ -1,4 +1,4 @@
-// layout.jsx – Required for Next.js App Router
+// app/layout.jsx
 
 export const metadata = {
   title: 'EGL GPQ ERP',
