@@ -1,5 +1,5 @@
 // app/layout.jsx
-import React from 'react';
+import './globals.css'; // If you're using Tailwind or global styles
 
 export const metadata = {
   title: 'EGL GPQ ERP',
