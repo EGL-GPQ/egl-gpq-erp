@@ -1,4 +1,4 @@
-// app/layout.jsx
+import React from 'react';
 
 export const metadata = {
   title: 'EGL GPQ ERP',
