@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
-import { db } from '@/app/firebaseConfig';
+import { db } from '../firebaseConfig'; // Make sure this path is correct
 import {
   collection,
-  getDocs,
   addDoc,
   onSnapshot,
 } from 'firebase/firestore';
@@ -17,7 +16,10 @@ export default function FabricTracker() {
 
   useEffect(() => {
     const unsubscribe = onSnapshot(fabricRef, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setRows(data);
     });
 
@@ -48,24 +50,36 @@ export default function FabricTracker() {
   };
 
   const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const cleanRows = rows.map(row => {
+      const { id, ...rest } = row;
+      return Object.fromEntries(
+        Object.entries(rest).map(([k, v]) => [k, String(v || '')])
+      );
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(cleanRows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Fabric Tracker');
     XLSX.writeFile(workbook, 'Fabric_Tracker.xlsx');
   };
 
   const getApprovalColor = (value = '') => {
-    const val = value.toLowerCase();
-    if (val.includes('approved')) return '#d4edda';
-    if (val.includes('pending')) return '#fff3cd';
-    if (val.includes('rejected')) return '#f8d7da';
+    const val = (value || '').toLowerCase();
+    if (val.includes('approved')) return '#d4edda';     // Green
+    if (val.includes('pending')) return '#fff3cd';      // Yellow
+    if (val.includes('rejected')) return '#f8d7da';     // Red
     return 'white';
   };
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1 style={{ fontWeight: 'bold', marginBottom: '10px' }}>
-        📌 Fabric Inhouse & Inspection Tracker
+      <h1 style={{
+        fontWeight: 'bold',
+        fontSize: '20px',
+        marginBottom: '10px',
+        textAlign: 'center'
+      }}>
+        🧾 Fabric Inhouse & Inspection Tracker
       </h1>
 
       <table
@@ -95,7 +109,7 @@ export default function FabricTracker() {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, i) => (
+          {rows.map((row) => (
             <tr key={row.id}>
               <td>{row.date}</td>
               <td>{row.style}</td>
@@ -120,7 +134,7 @@ export default function FabricTracker() {
         </tbody>
       </table>
 
-      <div style={{ marginTop: '15px' }}>
+      <div style={{ marginTop: '20px', textAlign: 'center' }}>
         <button
           onClick={handleAddRow}
           style={{
@@ -128,14 +142,13 @@ export default function FabricTracker() {
             color: '#fff',
             border: 'none',
             padding: '8px 16px',
-            borderRadius: '4px',
+            borderRadius: '5px',
             cursor: 'pointer',
             marginRight: '10px',
           }}
         >
           ➕ Add Row
         </button>
-
         <button
           onClick={exportToExcel}
           style={{
@@ -143,7 +156,7 @@ export default function FabricTracker() {
             color: '#fff',
             border: 'none',
             padding: '8px 16px',
-            borderRadius: '4px',
+            borderRadius: '5px',
             cursor: 'pointer',
           }}
         >
