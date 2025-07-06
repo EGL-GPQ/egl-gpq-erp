@@ -1,33 +1,30 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
+import { db } from '@/app/firebaseConfig';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  onSnapshot,
+} from 'firebase/firestore';
 
 export default function FabricTracker() {
-  const [rows, setRows] = useState([
-    {
-      date: '',
-      style: '',
-      fabric: '',
-      color: '',
-      supplier: '',
-      rollQty: '',
-      inhouseQty: '',
-      inspection: '',
-      shade: '',
-      shrinkage: '',
-      approvedBy: '',
-      remarks: '',
-    },
-  ]);
+  const [rows, setRows] = useState([]);
 
-  const handleChange = (index, key, value) => {
-    const updatedRows = [...rows];
-    updatedRows[index][key] = value;
-    setRows(updatedRows);
-  };
+  const fabricRef = collection(db, 'fabric_tracker');
 
-  const addRow = () => {
+  useEffect(() => {
+    const unsubscribe = onSnapshot(fabricRef, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setRows(data);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleAddRow = async () => {
     const newRow = {
       date: '',
       style: '',
@@ -42,7 +39,12 @@ export default function FabricTracker() {
       approvedBy: '',
       remarks: '',
     };
-    setRows([...rows, newRow]);
+
+    try {
+      await addDoc(fabricRef, newRow);
+    } catch (error) {
+      console.error('Error adding row:', error);
+    }
   };
 
   const exportToExcel = () => {
@@ -54,17 +56,17 @@ export default function FabricTracker() {
 
   const getApprovalColor = (value = '') => {
     const val = value.toLowerCase();
-    if (val.includes('approved')) return '#d4edda'; // Green
-    if (val.includes('pending')) return '#fff3cd'; // Yellow
-    if (val.includes('rejected')) return '#f8d7da'; // Red
+    if (val.includes('approved')) return '#d4edda';
+    if (val.includes('pending')) return '#fff3cd';
+    if (val.includes('rejected')) return '#f8d7da';
     return 'white';
   };
 
   return (
     <div style={{ padding: '20px' }}>
-      <h2 style={{ fontWeight: 'bold', fontSize: '20px', marginBottom: '15px' }}>
+      <h1 style={{ fontWeight: 'bold', marginBottom: '10px' }}>
         📌 Fabric Inhouse & Inspection Tracker
-      </h2>
+      </h1>
 
       <table
         border="1"
@@ -93,24 +95,26 @@ export default function FabricTracker() {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, rowIndex) => (
-            <tr key={rowIndex}>
-              {Object.keys(row).map((key) => (
-                <td
-                  key={key}
-                  style={{
-                    backgroundColor: key === 'approvedBy' ? getApprovalColor(row[key]) : 'white',
-                  }}
-                >
-                  <input
-                    type="text"
-                    value={row[key]}
-                    onChange={(e) => handleChange(rowIndex, key, e.target.value)}
-                    style={{ width: '100%', padding: '4px', border: 'none' }}
-                    placeholder={key === 'approvedBy' ? 'Approved / Pending / Rejected' : ''}
-                  />
-                </td>
-              ))}
+          {rows.map((row, i) => (
+            <tr key={row.id}>
+              <td>{row.date}</td>
+              <td>{row.style}</td>
+              <td>{row.fabric}</td>
+              <td>{row.color}</td>
+              <td>{row.supplier}</td>
+              <td>{row.rollQty}</td>
+              <td>{row.inhouseQty}</td>
+              <td>{row.inspection}</td>
+              <td>{row.shade}</td>
+              <td>{row.shrinkage}</td>
+              <td
+                style={{
+                  backgroundColor: getApprovalColor(row.approvedBy),
+                }}
+              >
+                {row.approvedBy}
+              </td>
+              <td>{row.remarks}</td>
             </tr>
           ))}
         </tbody>
@@ -118,7 +122,7 @@ export default function FabricTracker() {
 
       <div style={{ marginTop: '15px' }}>
         <button
-          onClick={addRow}
+          onClick={handleAddRow}
           style={{
             backgroundColor: '#007bff',
             color: '#fff',
