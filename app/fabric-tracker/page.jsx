@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -14,7 +13,7 @@ export default function FabricTracker() {
       supplier: '',
       rollQty: '',
       inhouseQty: '',
-      status: '',
+      inspection: '',
       shade: '',
       shrinkage: '',
       approvedBy: '',
@@ -23,13 +22,27 @@ export default function FabricTracker() {
   ]);
 
   const handleChange = (index, key, value) => {
-    const updated = [...rows];
-    updated[index][key] = value;
-    setRows(updated);
+    const updatedRows = [...rows];
+    updatedRows[index][key] = value;
+    setRows(updatedRows);
   };
 
   const addRow = () => {
-    setRows([...rows, { ...rows[0] }]);
+    const newRow = {
+      date: '',
+      style: '',
+      fabric: '',
+      color: '',
+      supplier: '',
+      rollQty: '',
+      inhouseQty: '',
+      inspection: '',
+      shade: '',
+      shrinkage: '',
+      approvedBy: '',
+      remarks: '',
+    };
+    setRows([...rows, newRow]);
   };
 
   const exportToExcel = () => {
@@ -39,18 +52,31 @@ export default function FabricTracker() {
     XLSX.writeFile(workbook, 'Fabric_Tracker.xlsx');
   };
 
-  const getApprovalColor = (value) => {
-    if (value.toLowerCase().includes('approved')) return '#d4edda';
-    if (value.toLowerCase().includes('pending')) return '#fff3cd';
-    if (value.toLowerCase().includes('rejected')) return '#f8d7da';
+  const getApprovalColor = (value = '') => {
+    const val = value.toLowerCase();
+    if (val.includes('approved')) return '#d4edda'; // Green
+    if (val.includes('pending')) return '#fff3cd'; // Yellow
+    if (val.includes('rejected')) return '#f8d7da'; // Red
     return 'white';
   };
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1 style={{ fontWeight: 'bold', marginBottom: '10px' }}>🧾 Fabric Inhouse & Inspection Tracker</h1>
-      <table border="1" cellPadding="5" style={{ width: '100%', fontSize: '14px' }}>
-        <thead>
+      <h2 style={{ fontWeight: 'bold', fontSize: '20px', marginBottom: '15px' }}>
+        📌 Fabric Inhouse & Inspection Tracker
+      </h2>
+
+      <table
+        border="1"
+        cellPadding="5"
+        style={{
+          width: '100%',
+          fontSize: '14px',
+          borderCollapse: 'collapse',
+          textAlign: 'center',
+        }}
+      >
+        <thead style={{ backgroundColor: '#f0f0f0' }}>
           <tr>
             <th>Date</th>
             <th>Style</th>
@@ -67,15 +93,21 @@ export default function FabricTracker() {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, i) => (
-            <tr key={i}>
+          {rows.map((row, rowIndex) => (
+            <tr key={rowIndex}>
               {Object.keys(row).map((key) => (
-                <td key={key} style={{ backgroundColor: key === 'approvedBy' ? getApprovalColor(row[key]) : 'white' }}>
+                <td
+                  key={key}
+                  style={{
+                    backgroundColor: key === 'approvedBy' ? getApprovalColor(row[key]) : 'white',
+                  }}
+                >
                   <input
                     type="text"
                     value={row[key]}
-                    onChange={(e) => handleChange(i, key, e.target.value)}
-                    style={{ width: '100%' }}
+                    onChange={(e) => handleChange(rowIndex, key, e.target.value)}
+                    style={{ width: '100%', padding: '4px', border: 'none' }}
+                    placeholder={key === 'approvedBy' ? 'Approved / Pending / Rejected' : ''}
                   />
                 </td>
               ))}
@@ -83,11 +115,34 @@ export default function FabricTracker() {
           ))}
         </tbody>
       </table>
-      <div style={{ marginTop: '10px' }}>
-        <button onClick={addRow} style={{ marginRight: '10px', padding: '6px 12px' }}>
+
+      <div style={{ marginTop: '15px' }}>
+        <button
+          onClick={addRow}
+          style={{
+            backgroundColor: '#007bff',
+            color: '#fff',
+            border: 'none',
+            padding: '8px 16px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            marginRight: '10px',
+          }}
+        >
           ➕ Add Row
         </button>
-        <button onClick={exportToExcel} style={{ padding: '6px 12px' }}>
+
+        <button
+          onClick={exportToExcel}
+          style={{
+            backgroundColor: '#28a745',
+            color: '#fff',
+            border: 'none',
+            padding: '8px 16px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+          }}
+        >
           📤 Export to Excel
         </button>
       </div>
